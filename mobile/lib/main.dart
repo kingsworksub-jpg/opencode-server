@@ -37,9 +37,46 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
+  final TextEditingController _urlController = TextEditingController(text: 'http://192.168.1.10:3000');
+  final TextEditingController _tokenController = TextEditingController(text: 'opencode-secret-token');
   final List<ChatMessage> _messages = [];
-  final String _serverUrl = 'http://10.0.2.2:3000/api/execute'; // Android emulator default host, or change to PC IP
   bool _isLoading = false;
+
+  void _openSettings() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Server Settings'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _urlController,
+                decoration: const InputDecoration(
+                  labelText: 'Server Base URL (e.g. http://192.168.x.x:3000)',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _tokenController,
+                decoration: const InputDecoration(
+                  labelText: 'Bearer Token',
+                ),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _sendMessage() async {
     final text = _controller.text.trim();
@@ -51,10 +88,17 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     _controller.clear();
 
+    final baseUrl = _urlController.text.trim().replaceAll(RegExp(r'\/+$'), '');
+    final endpoint = '$baseUrl/api/execute';
+    final token = _tokenController.text.trim();
+
     try {
       final response = await http.post(
-        Uri.parse(_serverUrl),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(endpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({'command': text}),
       );
 
@@ -66,12 +110,12 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       } else {
         setState(() {
-          _messages.add(ChatMessage(text: 'Server error: ${response.statusCode}', isUser: false));
+          _messages.add(ChatMessage(text: 'Server error: ${response.statusCode} - ${response.body}', isUser: false));
         });
       }
     } catch (e) {
       setState(() {
-        _messages.add(ChatMessage(text: 'Connection failed: $e', isUser: false));
+        _messages.add(ChatMessage(text: 'Connection failed ($endpoint): $e', isUser: false));
       });
     } finally {
       setState(() {
@@ -85,6 +129,13 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('OpenCode Mobile Remote'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _openSettings,
+            tooltip: 'Server Settings',
+          ),
+        ],
       ),
       body: Column(
         children: [

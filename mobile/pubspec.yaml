@@ -1,5 +1,4 @@
-name: opencode_mobile
-
+name: mobile
 description: OpenCode Mobile Client for remote command execution and monitoring.
 publish_to: "none"
 

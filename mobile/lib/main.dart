@@ -40,37 +40,85 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _urlController = TextEditingController(text: 'http://100.87.195.37:3000');
   final TextEditingController _tokenController = TextEditingController(text: 'opencode-secret-token');
   final List<ChatMessage> _messages = [];
+  final List<String> _debugLogs = [];
   bool _isLoading = false;
+
+  void _addLog(String log) {
+    final timestamp = DateTime.now().toIso8601String().split('T').last.substring(0, 8);
+    setState(() {
+      _debugLogs.add('[$timestamp] $log');
+    });
+  }
 
   void _openSettings() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Server Settings'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _urlController,
-                decoration: const InputDecoration(
-                  labelText: 'Server Base URL (e.g. http://192.168.x.x:3000)',
-                ),
+          title: const Text('Server Settings & Debug'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _urlController,
+                    decoration: const InputDecoration(
+                      labelText: 'Server Base URL',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _tokenController,
+                    decoration: const InputDecoration(
+                      labelText: 'Bearer Token',
+                    ),
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('Connection & Session Logs:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 150,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: ListView.builder(
+                      itemCount: _debugLogs.length,
+                      itemBuilder: (context, index) {
+                        return Text(
+                          _debugLogs[index],
+                          style: const TextStyle(color: Colors.greenAccent, fontSize: 11, fontFamily: 'monospace'),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _debugLogs.clear();
+                        });
+                        Navigator.pop(context);
+                        _openSettings();
+                      },
+                      child: const Text('Clear Logs', style: TextStyle(color: Colors.red)),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _tokenController,
-                decoration: const InputDecoration(
-                  labelText: 'Bearer Token',
-                ),
-                obscureText: true,
-              ),
-            ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Save'),
+              child: const Text('Close'),
             ),
           ],
         );
@@ -92,6 +140,8 @@ class _ChatScreenState extends State<ChatScreen> {
     final endpoint = '$baseUrl/api/execute';
     final token = _tokenController.text.trim();
 
+    _addLog('Sending POST to $endpoint with command: "$text"');
+
     try {
       final response = await http.post(
         Uri.parse(endpoint),
@@ -100,7 +150,10 @@ class _ChatScreenState extends State<ChatScreen> {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({'command': text}),
-      );
+      ).timeout(const Duration(seconds: 15));
+
+      _addLog('Response status: ${response.statusCode}');
+      _addLog('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -114,6 +167,7 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
+      _addLog('Exception caught: $e');
       setState(() {
         _messages.add(ChatMessage(text: 'Connection failed ($endpoint): $e', isUser: false));
       });
@@ -133,7 +187,7 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: _openSettings,
-            tooltip: 'Server Settings',
+            tooltip: 'Server Settings & Debug',
           ),
         ],
       ),

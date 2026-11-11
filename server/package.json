@@ -7,7 +7,9 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "cors": "^2.8.5"
+    "@opencode/core": "^2.2.7",
+    "@opencode/plugin": "^2.2.7",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
   }
 }

@@ -37,7 +37,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
-  final TextEditingController _urlController = TextEditingController(text: 'http://192.168.1.10:3000');
+  final TextEditingController _urlController = TextEditingController(text: 'http://100.87.195.37:3000');
   final TextEditingController _tokenController = TextEditingController(text: 'opencode-secret-token');
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;

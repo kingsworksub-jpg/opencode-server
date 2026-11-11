@@ -22,6 +22,11 @@ const authenticate = (req, res, next) => {
   next();
 };
 
+// Root endpoint for browser check
+app.get('/', (req, res) => {
+  res.send('<html><body style="font-family:sans-serif;text-align:center;padding-top:50px;"><h1>OpenCode Bridge Server is Running</h1><p>This is the backend API bridge for the OpenCode Mobile App.</p></body></html>');
+});
+
 // Status endpoint matching OpenCode standard bridge
 app.get('/api/status', (req, res) => {
   res.json({ status: 'online', message: 'OpenCode Standard Bridge Server is running' });

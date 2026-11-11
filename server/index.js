@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const { exec } = require('child_process');
-const OpenCodeCore = require('@opencode/core');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,23 +22,19 @@ const authenticate = (req, res, next) => {
   next();
 };
 
-// Status endpoint with OpenCode Core info
+// Status endpoint matching OpenCode standard bridge
 app.get('/api/status', (req, res) => {
-  res.json({ 
-    status: 'online', 
-    message: 'OpenCode Standard Bridge Server is running',
-    coreVersion: OpenCodeCore.version || '2.2.7'
-  });
+  res.json({ status: 'online', message: 'OpenCode Standard Bridge Server is running' });
 });
 
-// Command execution endpoint using standard core integration
+// Command execution endpoint
 app.post('/api/execute', authenticate, (req, res) => {
   const { command } = req.body;
   if (!command || typeof command !== 'string') {
     return res.status(400).json({ error: 'Valid command string is required' });
   }
 
-  console.log(`[OpenCode Core] Executing command: ${command}`);
+  console.log(`Executing command: ${command}`);
 
   exec(command, { cwd: 'C:\\Users\\norio\\opencode-server', timeout: 30000 }, (error, stdout, stderr) => {
     if (error) {
@@ -59,5 +54,5 @@ app.post('/api/execute', authenticate, (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`OpenCode Standard Bridge Server running on port ${PORT} with @opencode/core`);
+  console.log(`OpenCode Standard Bridge Server running securely on port ${PORT}`);
 });

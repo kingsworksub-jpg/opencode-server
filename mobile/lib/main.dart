@@ -88,7 +88,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     _controller.clear();
 
-    final baseUrl = _urlController.text.trim().replaceAll(RegExp(r'\/+$'), '');
+    final baseUrl = _urlController.text.replaceAll(' ', '').trim().replaceAll(RegExp(r'\/+$'), '');
     final endpoint = '$baseUrl/api/execute';
     final token = _tokenController.text.trim();
 
